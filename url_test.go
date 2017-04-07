@@ -37,6 +37,8 @@ func TestJoin(t *testing.T) {
 	helper, _ := NewURLHelper(makeReq("/some/path?test=123", "1.2.3.4", nil, nil))
 	validate(helper.Join("new"), "http://1.2.3.4/some/path/new?test=123", "Should add new path to end of /some/path", t)
 	validate(helper.Join(".."), "http://1.2.3.4/some?test=123", "Relitive back should work", t)
+	validate(helper.Join(""), "http://1.2.3.4/some/path?test=123", "Blank should return the same as current", t)
+	validate(helper.Join("."), "http://1.2.3.4/some/path?test=123", ". should return the same as current", t)
 
 	xfh := "api.example.dev"
 	helperWithXfh, _ := NewURLHelper(makeReq("/some/path?test=123", "1.2.3.4", &xfh, nil))
@@ -49,11 +51,28 @@ func TestJoin(t *testing.T) {
 	validate(helperWithXfp.Join(".."), "https://api.example.dev/some?test=123", "Relitive back should work", t)
 }
 
+func TestJoinWithQuery(t *testing.T) {
+	helper, _ := NewURLHelper(makeReq("/some/path?test=123", "1.2.3.4", nil, nil))
+	q := url.Values{}
+	validate(helper.JoinWithQuery("new", q), "http://1.2.3.4/some/path/new", "Should add new path to end of /some/path remove query", t)
+
+	q = url.Values{}
+	q.Add("token", "123")
+	validate(helper.JoinWithQuery("..", q), "http://1.2.3.4/some?token=123", "Relitive back should work with new query", t)
+	validate(helper.JoinWithQuery("", url.Values{}), "http://1.2.3.4/some/path", "Blank with no query", t)
+	validate(helper.JoinWithQuery(".", q), "http://1.2.3.4/some/path?token=123", ". with with new query", t)
+	q = url.Values{}
+	q.Add("token", "1 2 3")
+	validate(helper.JoinWithQuery(".", q), "http://1.2.3.4/some/path?token=1+2+3", ". with with new query", t)
+}
+
 func TestPath(t *testing.T) {
 	helper, _ := NewURLHelper(makeReq("/some/path?test=123", "1.2.3.4", nil, nil))
 	validate(helper.Path("/some/new"), "http://1.2.3.4/some/new", "Should have new path", t)
 	validate(helper.Path("/"), "http://1.2.3.4/", "Should have new base path", t)
-	validate(helper.PathWithQuery("/", "page=123"), "http://1.2.3.4/?page=123", "Should have new base path", t)
+	q := url.Values{}
+	q.Add("page", "123")
+	validate(helper.PathWithQuery("/", q), "http://1.2.3.4/?page=123", "Should have new base path", t)
 	validate(helper.Join("new"), "http://1.2.3.4/some/path/new?test=123", "Should have new base path", t)
 
 	xfh := "api.example.dev"

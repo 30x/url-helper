@@ -59,6 +59,12 @@ func (uh URLHelper) Join(pathname string) string {
 	return uh.base.String()
 }
 
+func (uh URLHelper) JoinWithQuery(pathname string, query url.Values) string {
+	defer uh.reset()
+	uh.base.Path = path.Join(uh.base.EscapedPath(), pathname)
+	return uh.path(uh.base.Path, &query)
+}
+
 /*
 Path returns the absolute of the request reset to the inputed path segment. Removes all query params.
 */
@@ -69,7 +75,7 @@ func (uh URLHelper) Path(pathname string) string {
 /*
 PathWithQuery returns the absolute of the request reset to the inputed path segment and uses the inputed query params.
 */
-func (uh URLHelper) PathWithQuery(pathname string, query string) string {
+func (uh URLHelper) PathWithQuery(pathname string, query url.Values) string {
 	return uh.path(pathname, &query)
 }
 
@@ -87,11 +93,11 @@ func (uh URLHelper) reset() {
 	uh.base.Path = uh.origBase
 }
 
-func (uh URLHelper) path(pathname string, query *string) string {
+func (uh URLHelper) path(pathname string, query *url.Values) string {
 	defer uh.reset()
 	origQuery := uh.base.RawQuery
 	if query != nil {
-		uh.base.RawQuery = *query
+		uh.base.RawQuery = query.Encode()
 	} else {
 		uh.base.RawQuery = ""
 	}
