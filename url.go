@@ -11,7 +11,12 @@ const (
 	XForwardedHost = "X-Forwarded-Host"
 	// XForwardedProtocol header for http protocol forwarding
 	XForwardedProtocol = "X-Forwarded-Proto"
+	// XForwardedPathPrefix header for path prefix eg. Path is appended to beging of url generating urls
+	XForwardedPathPrefix = "X-Forwarded-Path-Prefix"
 )
+
+// EnablePathPrefix is a flag to enable path prefix for entire module
+var EnablePathPrefix = false
 
 // URLHelper struct to keep internal state of the request object
 type URLHelper struct {
@@ -42,6 +47,10 @@ func NewURLHelper(req *http.Request) (*URLHelper, error) {
 		} else {
 			u.Scheme = "http"
 		}
+	}
+
+	if EnablePathPrefix {
+		u.Path = path.Join(req.Header.Get(XForwardedPathPrefix), u.Path)
 	}
 
 	return &URLHelper{
