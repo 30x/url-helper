@@ -75,6 +75,17 @@ func (uh URLHelper) JoinWithQuery(pathname string, query url.Values) string {
 }
 
 /*
+SchemePlusHost returns the Scheme concatenated with the host but no path
+*/
+func (uh URLHelper) SchemePlusHost() string {
+	var tempURL url.URL
+	tempURL.Host = uh.base.Host
+	tempURL.Scheme = uh.base.Scheme
+
+	return tempURL.String()
+}
+
+/*
 Path returns the absolute of the request reset to the inputed path segment. Removes all query params.
 */
 func (uh URLHelper) Path(pathname string) string {
